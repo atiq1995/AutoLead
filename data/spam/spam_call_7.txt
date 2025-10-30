@@ -1,0 +1,14 @@
+SPAM CALL DETECTED
+==================================================
+Call ID: 7
+Audio: data\recordings\uploaded_20251031_024837_cleaned.wav
+Confidence: 100.00%
+
+Transcript:
+Exclusive limited time offer. Get rich quick with our amazing money making system. Earn thousands of dollars from home with zero effort. Act now and we'll give you a special discount. This offer expires today. Free money waiting for you. Call immediately to claim your free cash bonus.
+
+Spam Features:
+  urgency: {'detected': True, 'keywords': ['limited time', 'act now', 'immediately'], 'count': 3}
+  free_offers: {'detected': True, 'keywords': ['free'], 'count': 1}
+  financial: {'detected': True, 'keywords': ['money', 'cash'], 'count': 2}
+  suspicious: {'detected': True, 'keywords': ['claim', 'offer'], 'count': 2}

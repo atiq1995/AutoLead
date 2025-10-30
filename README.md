@@ -36,7 +36,7 @@ The system consists of five main components:
 
 1. **Audio Processor** - Handles noise reduction and audio normalization
 2. **Speech-to-Text Engine** - Uses OpenAI Whisper for transcription
-3. **Spam Detector** - ML-based classification using Random Forest
+3. **Spam Detector** - ML-based classification using Logistic Regression (TF‑IDF)
 4. **Call Logger** - SQLite database for storing call records
 5. **Web Interface** - Flask-based demonstration dashboard
 
@@ -48,9 +48,10 @@ The system consists of five main components:
 - Sample rate: 16kHz mono
 
 ### Spam Detection
-- Random Forest classifier with TF-IDF vectorization
-- Trained on 30 sample calls (15 spam, 15 legitimate)
-- Detects patterns: urgency keywords, free offers, financial scams
+- Logistic Regression classifier with TF‑IDF vectorization (word n‑grams)
+- Trained from datasets in `Spam Filtering/` (SMS, emails, Enron, etc.)
+- Configurable threshold via `.env` (`SPAM_THRESHOLD`)
+- Details: see `docs/SPAM_FILTERING.md`
 
 ### Audio Processing
 - Noise reduction using spectral subtraction

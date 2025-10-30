@@ -9,6 +9,7 @@ TODO: Add online learning to improve model over time
 """
 import numpy as np
 import pandas as pd
+import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -35,9 +36,12 @@ class SpamDetector:
         self.vectorizer = None
         self.threshold = config.SPAM_THRESHOLD
         self.is_trained = False
+        self.keyword_boost_keywords = set()
         
         # Try to load existing model
         self._load_model()
+        # Load keyword boosts (from repo blacklist if present)
+        self._load_keyword_boosts()
     
     def _load_model(self):
         """Load pre-trained model if available"""
@@ -103,6 +107,38 @@ class SpamDetector:
         
         # Train model
         self.train(texts, labels)
+
+    def _load_keyword_boosts(self) -> None:
+        """Load keyword list to lightly boost spam probability.
+
+        Looks for 'Spam Filtering/blacklist.json' at repo root. Falls back to
+        a few built-in phrases. The boost is applied in predict().
+        """
+        try:
+            # repo root assumed to be two levels up from this file
+            repo_root = Path(__file__).resolve().parents[1]
+            bl_path = repo_root / 'Spam Filtering' / 'blacklist.json'
+            base_keywords = {
+                'free offer',
+                'free prize',
+                'free gift',
+                'win cash',
+                'free vacation',
+            }
+            loaded_keywords = set()
+            if bl_path.exists():
+                try:
+                    data = json.loads(bl_path.read_text(encoding='utf-8'))
+                    kws = data.get('keywords', []) if isinstance(data, dict) else []
+                    for kw in kws:
+                        if isinstance(kw, str) and kw.strip():
+                            loaded_keywords.add(kw.strip().lower())
+                except Exception:
+                    pass
+            self.keyword_boost_keywords = base_keywords | loaded_keywords
+        except Exception:
+            # Non-fatal; proceed without keyword boosts
+            self.keyword_boost_keywords = set()
     
     def train(self, texts: list, labels: list):
         """
@@ -175,25 +211,42 @@ class SpamDetector:
             }
         
         try:
+            text_lower = text.lower()
             # Vectorize input
-            X = self.vectorizer.transform([text.lower()])
-            
-            # Get probability
-            spam_prob = self.model.predict_proba(X)[0][1]
-            
-            # Classify
-            is_spam = spam_prob >= self.threshold
-            
+            X = self.vectorizer.transform([text_lower])
+
+            # Base probability from model
+            spam_prob = float(self.model.predict_proba(X)[0][1])
+
+            # Lightweight keyword-based boost for phrases like "free offer"
+            boost = 0.0
+            try:
+                if any(kw in text_lower for kw in self.keyword_boost_keywords):
+                    boost += 0.15
+                # Additional minor boost when both words appear separately
+                if ('free' in text_lower) and ('offer' in text_lower):
+                    boost += 0.05
+            except Exception:
+                pass
+
+            boosted_prob = max(0.0, min(1.0, spam_prob + boost))
+
+            # Classify with configured threshold
+            is_spam = boosted_prob >= self.threshold
+
             result = {
                 'is_spam': bool(is_spam),
-                'confidence': float(spam_prob),
-                'spam_probability': float(spam_prob),
-                'legitimate_probability': float(1 - spam_prob)
+                'confidence': float(boosted_prob),
+                'spam_probability': float(boosted_prob),
+                'legitimate_probability': float(1 - boosted_prob),
+                'boost_applied': float(boost),
             }
-            
-            logger.info(f"Spam detection: {'SPAM' if is_spam else 'LEGITIMATE'} "
-                       f"(confidence: {spam_prob:.2%})")
-            
+
+            logger.info(
+                f"Spam detection: {'SPAM' if is_spam else 'LEGITIMATE'} "
+                f"(base: {spam_prob:.2%}, boost: {boost:.0%}, final: {boosted_prob:.2%})"
+            )
+
             return result
             
         except Exception as e:

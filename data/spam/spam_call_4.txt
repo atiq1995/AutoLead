@@ -1,0 +1,14 @@
+SPAM CALL DETECTED
+==================================================
+Call ID: 4
+Audio: data\recordings\uploaded_20251031_020856_cleaned.wav
+Confidence: 75.72%
+
+Transcript:
+Hey Thiek, hope you're doing well. So I just wanted to have a 5 minute maybe or 10 minute conversation with you. I don't know. I just wanted a few insights about the real estate. Maybe you might be interested in a free offer that I've got for you. Maybe before we start this conversation maybe I can tell you about the offer. Would you be interested to listen to the free offer?
+
+Spam Features:
+  urgency: {'detected': False, 'keywords': [], 'count': 0}
+  free_offers: {'detected': True, 'keywords': ['free'], 'count': 1}
+  financial: {'detected': False, 'keywords': [], 'count': 0}
+  suspicious: {'detected': True, 'keywords': ['offer'], 'count': 1}

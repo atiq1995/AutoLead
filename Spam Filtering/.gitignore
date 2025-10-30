@@ -1,0 +1,11 @@
+# Ignore all CSV files
+*.csv
+
+# Ignore other data files
+*.data
+*.file
+SMSSpamCollection
+
+# Ignore Python cache
+__pycache__/
+*.pyc
